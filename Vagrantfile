@@ -6,7 +6,7 @@ require 'fileutils'
 Vagrant.require_version ">= 1.6.0"
 
 # Make sure the vagrant-ignition plugin is installed
-required_plugins = %w(vagrant-ignition)
+required_plugins = %w(vagrant-ignition vagrant-hostmanager)
 
 plugins_to_install = required_plugins.select { |plugin| not Vagrant.has_plugin? plugin }
 if not plugins_to_install.empty?
@@ -64,6 +64,11 @@ Vagrant.configure("2") do |config|
   config.ssh.insert_key = false
   # forward ssh agent to easily ssh into the different machines
   config.ssh.forward_agent = true
+
+  # enable hostmanager
+  config.hostmanager.enabled = true
+  # configure the host's /etc/hosts
+  config.hostmanager.manage_host = true
 
   config.vm.box = "coreos-#{$update_channel}"
   config.vm.box_url = "https://#{$update_channel}.release.core-os.net/amd64-usr/#{$image_version}/coreos_production_vagrant_virtualbox.json"
