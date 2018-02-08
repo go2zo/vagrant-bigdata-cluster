@@ -36,6 +36,9 @@ $vb_cpuexecutioncap = 100
 $shared_folders = {}
 $forwarded_ports = {}
 
+$instance_name_format = "%s-%02d"
+$instance_names = {}
+
 # Attempt to apply the deprecated environment variable NUM_INSTANCES to
 # $num_instances while allowing config.rb to override it
 if ENV["NUM_INSTANCES"].to_i > 0 && ENV["NUM_INSTANCES"]
@@ -94,7 +97,8 @@ Vagrant.configure("2") do |config|
   end
 
   (1..$num_instances).each do |i|
-    config.vm.define vm_name = "%s-%02d" % [$instance_name_prefix, i] do |config|
+    vm_name = $instance_name_format % [$instance_name_prefix, i]
+    config.vm.define vm_name do |config|
       config.vm.hostname = vm_name
 
       if $enable_serial_logging

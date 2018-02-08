@@ -45,6 +45,9 @@ end
 # "core-01" through to "core-${num_instances}".
 #$instance_name_prefix="core"
 
+# Default instance name format
+#$instance_name_format="%s-%02d"
+
 # Change the version of CoreOS to be installed
 # To deploy a specific version, simply set $image_version accordingly.
 # For example, to deploy version 709.0.0, set $image_version="709.0.0".
