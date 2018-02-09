@@ -36,6 +36,15 @@ $vb_cpuexecutioncap = 100
 $shared_folders = {}
 $forwarded_ports = {}
 
+$instance_name_format = "%s-%02d"
+
+$extra_instance_name_prefixes = {}
+$extra_instance_name_formats = {}
+
+$domain_name = ""
+
+$docker_base = false
+
 # Attempt to apply the deprecated environment variable NUM_INSTANCES to
 # $num_instances while allowing config.rb to override it
 if ENV["NUM_INSTANCES"].to_i > 0 && ENV["NUM_INSTANCES"]
@@ -94,8 +103,25 @@ Vagrant.configure("2") do |config|
   end
 
   (1..$num_instances).each do |i|
-    config.vm.define vm_name = "%s-%02d" % [$instance_name_prefix, i] do |config|
+    name_prefix = $instance_name_prefix
+    name_format = $instance_name_format
+
+    # extra instance name check
+    selected_name_prefixes = $extra_instance_name_prefixes.select {|k,v| v.include?(i)}.keys
+    if selected_name_prefixes && selected_name_prefixes.size > 0
+      name_prefix = selected_name_prefixes.first
+
+      if $extra_instance_name_formats[name_prefix]
+        name_format = $extra_instance_name_formats[name_prefix]
+      end
+    end
+
+    config.vm.define vm_name = name_format % [name_prefix, i] do |config|
       config.vm.hostname = vm_name
+
+      if $domain_name
+        config.hostmanager.aliases = ["#{vm_name}.#{$domain_name}"]
+      end
 
       if $enable_serial_logging
         logdir = File.join(File.dirname(__FILE__), "log")
@@ -125,6 +151,11 @@ Vagrant.configure("2") do |config|
 
       $forwarded_ports.each do |guest, host|
         config.vm.network "forwarded_port", guest: guest, host: host, auto_correct: true
+      end
+
+      # foward Docker registry port to host for node 01
+      if i == 1
+        config.vm.network :forwarded_port, guest: 5000, host: 5000
       end
 
       ["vmware_fusion", "vmware_workstation"].each do |vmware|
@@ -172,6 +203,13 @@ Vagrant.configure("2") do |config|
         # and previously specified options (ip and hostname). Otherwise, it appends those to the provided config.ign below
         if File.exist?(IGNITION_CONFIG_PATH)
           config.ignition.path = 'config.ign'
+        end
+      end
+
+      if $docker_base
+        config.vm.provision :docker do |d|
+          d.build_image "/vagrant", args: "-t go2zo/centos7"
+          d.run "go2zo/centos7"
         end
       end
     end
