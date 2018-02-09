@@ -209,7 +209,7 @@ Vagrant.configure("2") do |config|
       if $docker_base
         config.vm.provision :docker do |d|
           d.build_image "/vagrant", args: "-t go2zo/centos7"
-          d.run "go2zo/centos7"
+          d.run "go2zo/centos7", args: "--privileged"
         end
       end
     end

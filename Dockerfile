@@ -2,21 +2,21 @@ FROM centos:7
 MAINTAINER Jiho Kim <go2zo@apexsoft.co.kr>
 
 ENV JDK_VERSION jdk8
+ENV JDK_RPM jdk-8u161-linux-x64.rpm
 
 ARG HOSTNAME
 
-# Upgrading system & Installing JDK
-RUN yum -y update && \
-    yum -y install wget
+# Installing JDK
+ADD $JDK_RPM /tmp/
+RUN yum -y localinstall /tmp/$JDK_RPM && \
+    rm -f /tmp/$JDK_RPM
 
-RUN URL=$(wget -qO- https://lv.binarybabel.org/catalog-api/java/$JDK_VERSION.txt?p=downloads.rpm) && \
-    wget --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" $URL --output-document=/tmp/jdk-linux.rpm && \
-    yum -y localinstall /tmp/jdk-linux.rpm && \
-    rm -f /tmp/jdk-linux.rpm
+# Upgrading system
+RUN yum -y update
 
 # enable ntpd
-#RUN yum -y install ntpd && \
-#    sudo systemctl start ntpd
+RUN yum -y install ntpd && \
+    systemctl start ntpd
 
 # Setting timezone
 #RUN sudo timedatectl set-timezone Asia/Seoul
